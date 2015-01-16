@@ -1,14 +1,3 @@
-#coding=utf8
-'''
-@author: Bright
-@description: This shows how to use bs4 and urllib2 to crawl news page from sina website.
-In this program, all url are put in a queue. The visited url will be put into a set named
-visited. So the same url will not be visited twice.
-When crawling web page, many unexpected thing may happen. So when any unexpected thing
-happened, I use try and expert to catch it, and ignore this accident. try and expert are 
-really helpful techniques when you processing these complicated things.
-'''
-
 import urllib2
 import gzip
 import StringIO
@@ -24,6 +13,8 @@ def decodePage(page):
             else:
                 data = gzip.GzipFile('', 'rb', 9, StringIO.StringIO(content))
             page = data.read()
+        else:
+            page = page.read()
         return page
     except:
         return None
@@ -89,7 +80,7 @@ def extractArticle(content):
 
 ATTRIS = ['type', 'title', 'description', 'url', 'create_at', 'update_at', 'text']
 def writeArticle(fields, name):
-    f = open('E:\\workspace\\Baike\\src\\news\\' + name, 'w')
+    f = open('E:\\workspace\\Baike\\src\\news3\\' + name, 'w')
     if fields == None:
         return
     for attri in ATTRIS:
@@ -103,13 +94,13 @@ def writeArticle(fields, name):
     
 visited = set()
 queue = []
-def crawling():
+def crawling(url = 'http://news.sina.com.cn/'):
     cnt = 1
-    queue.append('http://news.sina.com.cn/c/2015-01-14/184231399763.shtml')
-    while len(queue) > 0 and cnt < 3000:
+    queue.append(url)
+    visited.add(url)
+    while len(queue) > 0:
         url = queue[0]
         queue.pop(0)
-        visited.add(url)
         try:
             print 'getPage %s ...' %(url.encode('GB18030'))
         except:
@@ -129,24 +120,27 @@ def crawling():
             for link in links:
                 if link not in visited:
                     queue.append(link)
+                    visited.add(link)
         fields = extractArticle(data)
         if fields != None:
             print '-----------writeArticle %d' %(cnt)
             writeArticle(fields, str(cnt))
             cnt += 1
 
-if __name__ == '__main__':
-    crawling()
-    
-def test():
-    getPage('test')
-    data = getPage('http://news.sina.com.cn/c/2015-01-14/184231399763.shtml')
+def test(url):
+    data = getPage(url)
     data = data.decode('GB18030', 'ignore')
     data = data.encode('utf8')
-    links = extractLinks(data)
-    for link in links:
-        print link
+    #links = extractLinks(data)
+    #for link in links:
+    #    print link
     fields = extractArticle(data)
     if fields != None:
-        writeArticle(fields, '1')
+        for item in fields:
+            print item, ':', fields[item].encode('utf8')
+
+if __name__ == '__main__':
+    test('http://ent.sina.com.cn/m/c/2015-01-15/doc-icczmvun4987366.shtml')
+    #crawling('http://roll.news.sina.com.cn/s/channel.php?ch=01#col=89&spec=&type=&ch=01&k=&offset_page=0&offset_num=0&num=60&asc=&page=1')
     
+   
