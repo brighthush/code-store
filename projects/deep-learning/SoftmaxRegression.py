@@ -55,9 +55,9 @@ class SoftmaxRegression(object):
         return T.mean(T.neq(self.y_pred, y))
 
 
-def sgd_optimization(learning_rate=0.13, n_epochs=1000,
+def sgd_optimization(learning_rate=0.13, n_epochs=20000,
                            dataPath='./docvecs.out',
-                           batch_size=1):
+                           batch_size=50):
     
     x, y, labels, labelHash, rowNames = rd.readData(dataPath)
     train, validate, test = rd.generateShared(x, y)
@@ -190,8 +190,8 @@ def sgd_optimization(learning_rate=0.13, n_epochs=1000,
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     #improve patience if loss improvement is good enough
-                    if this_validation_loss < best_validation_loss *  \
-                       improvement_threshold:
+                    if this_validation_loss < best_validation_loss:
+                       #improvement_threshold:
                         patience = max(patience, iter * patience_increase)
 
                     best_validation_loss = this_validation_loss
@@ -233,5 +233,5 @@ def sgd_optimization(learning_rate=0.13, n_epochs=1000,
                           ' ran for %.1fs' % ((end_time - start_time)))
 
 if __name__ == '__main__':
-    sgd_optimization()
+    sgd_optimization(dataPath='/home/lzh/experiments/w2v_lzh/text2vec/bin/docvecs.out')
 

@@ -75,7 +75,10 @@ def generateShared(x, y):
             shared_data(test_x, test_y)
 
 if __name__ == '__main__':
-    x, y, labels, labelHash = readData()
+    x, y, labels, labelHash,rowNames = readData('/home/lzh/experiments/w2v_lzh/text2vec/bin/docvecs.out')
+    print labels
+    print labelHash
+    exit()
     print x
     for i in range(len(x)):
         print x[i], y[i], labels[y[i]]

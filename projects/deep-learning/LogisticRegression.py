@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 #author: BrightHush
-#filename: logistic_regression.py
 
 """
 Created on Sun Nov 16 21:37:43 2014
 @author: BrightHush
-Example for Logistic Regression
+@description: Logistic Regression is a a binary classification algorithm.
+In this example, we use gradient descent to optimize this negative log likelihood.
 """
 
 import time

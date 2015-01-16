@@ -1,11 +1,12 @@
 #coding=utf8
-#author: BrightHush
-#filename: mlp.py
-
 """
-This tutorial introduces the multilayer perceptron using Theano.
+@author: Bright
+@description: This code is an implementation of multi layer 
+perceptron algorithm in theano package. This file is modified 
+from deep learning tutorial.
 
- A multilayer perceptron is a logistic regressor where
+This tutorial introduces the multilayer perceptron using Theano.
+A multilayer perceptron is a logistic regressor where
 instead of feeding the input to the logistic regression you insert a
 intermediate layer, called the hidden layer, that has a nonlinear
 activation function (usually tanh or sigmoid) . One can use many such
@@ -35,8 +36,8 @@ import theano
 import theano.tensor as T
 
 
-from logistic_regression import LogisticRegression, generate_data
-
+from SoftmaxRegression import SoftmaxRegression
+import ReadData as rd
 
 # start-snippet-1
 class HiddenLayer(object):
@@ -161,23 +162,24 @@ class MLP(object):
 
         # The logistic regression layer gets as input the hidden units
         # of the hidden layer
-        self.logRegressionLayer = LogisticRegression(
+        self.logRegressionLayer = SoftmaxRegression(
             input=self.hiddenLayer.output,
             n_in=n_hidden,
+            n_out=n_out
         )
         # end-snippet-2 start-snippet-3
         # L1 norm ; one regularization option is to enforce L1 norm to
         # be small
         self.L1 = (
             abs(self.hiddenLayer.W).sum()
-            + abs(self.logRegressionLayer.w).sum()
+            + abs(self.logRegressionLayer.W).sum()
         )
 
         # square of L2 norm ; one regularization option is to enforce
         # square of L2 norm to be small
         self.L2_sqr = (
             (self.hiddenLayer.W ** 2).sum()
-            + (self.logRegressionLayer.w ** 2).sum()
+            + (self.logRegressionLayer.W ** 2).sum()
         )
 
         # negative log likelihood of the MLP is given by the negative
@@ -195,8 +197,8 @@ class MLP(object):
         # end-snippet-3
 
 
-def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
-             dataset='mnist.pkl.gz', batch_size=20, n_hidden=50):
+def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10000,
+             dataset='mnist.pkl.gz', batch_size=50, n_hidden=1000):
     """
     Demonstrate stochastic gradient descent optimization for a multilayer
     perceptron
@@ -224,7 +226,8 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
 
 
    """
-    datasets = generate_data()
+    x, y, labels, labelHash, rowNames = rd.readData(dataset)
+    datasets = rd.generateShared(x, y)
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
@@ -248,13 +251,15 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
 
     rng = numpy.random.RandomState(1234)
 
+    print "MLP parameters n_in:%d n_hidden:%d n_out:%d" \
+            %(train_set_x.get_value().shape[1], n_hidden, len(labels))
     # construct the MLP class
     classifier = MLP(
         rng=rng,
         input=x,
         n_in=train_set_x.get_value().shape[1],
         n_hidden=n_hidden,
-        n_out=10
+        n_out=len(labels)
     )
 
     # start-snippet-4
@@ -325,10 +330,10 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
     print '... training'
 
     # early-stopping parameters
-    patience = 10000  # look as this many examples regardless
+    patience = 100000  # look as this many examples regardless
     patience_increase = 2  # wait this much longer when a new best is
                            # found
-    improvement_threshold = 0.995  # a relative improvement of this much is
+    improvement_threshold = 0.9995  # a relative improvement of this much is
                                    # considered significant
     validation_frequency = min(n_train_batches, patience / 2)
                                   # go through this many
@@ -404,4 +409,4 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
 
 
 if __name__ == '__main__':
-    test_mlp()
+    test_mlp(dataset='/home/lzh/experiments/w2v_lzh/text2vec/bin/docvecs.out')
