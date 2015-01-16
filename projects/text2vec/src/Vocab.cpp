@@ -89,7 +89,7 @@ void Vocab::addText2Vocab(char *text)
     free(word);
 }
 
-int Vocab::text2Index(char *text, int *indexs, int &indexsSize)
+int Vocab::text2Index(char *text, int *&indexs, int &indexsSize)
 {
     LL size=strlen(text), i=0, j;
     char *word = (char *)malloc(sizeof(char) * MAX_STRING);
@@ -105,7 +105,7 @@ int Vocab::text2Index(char *text, int *indexs, int &indexsSize)
         if(j != 0) {
             word[j] = '\0';
             j = searchVocab(word);
-            if(wordCount >= indexsSize + 1)
+            if(wordCount + 2 >= indexsSize)
             {
                 indexsSize += 1000;
                 indexs = (int *)realloc(indexs, indexsSize * sizeof(int));

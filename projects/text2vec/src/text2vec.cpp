@@ -30,6 +30,8 @@ int main(int argc, char **argv)
         printf("\t-testDataPath <test data directory path>\n");
         printf("\t\tindicate the path for test data. In training stage, this paramter can be ignored "
                 "in training stage.\n");
+        printf("\t-numIteration <int>\n");
+        printf("\t\tindicate the number of training or testing iteration, always be integer in [10, 30].\n");
         return 0;
     }
 
@@ -40,6 +42,7 @@ int main(int argc, char **argv)
     if((pos = argPos((char *)"-predict", argc, argv)) > 0) glPredictStage = atoi(argv[pos+1]);
     if((pos = argPos((char *)"-trainDataPath", argc, argv)) > 0) strcpy(trainDataPath, argv[pos+1]);
     if((pos = argPos((char *)"-testDataPath", argc, argv)) > 0) strcpy(testDataPath, argv[pos+1]);
+    if((pos = argPos((char *)"-numIteration", argc, argv)) > 0) numIteration = atoi(argv[pos+1]);
     
     initExpTable();
 
@@ -60,12 +63,15 @@ int main(int argc, char **argv)
         strcpy(filePath, paths[i].c_str());
         printf("read file: %s\n", filePath);
         LL length = readFile(filePath, content, contentSize);
+        printf("contentSize:%d length:%d\n", (int)contentSize, (int)length);
         vocabulary.addText2Vocab(content);
         vocabulary.addDoc(paths[i]);
     }
-
+    free(filePath);
+    free(content);
     cout << "vocabSize: " << vocabulary.get_vocabSize() << endl;
     vocabulary.sortVocab();
+
     if(glPredictStage) 
     {
         paths = readDir(testDataPath);

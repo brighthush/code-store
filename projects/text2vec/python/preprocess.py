@@ -8,6 +8,7 @@
 ##########################################################################
 
 import os
+import random
 
 def readDir(dirPath):
     if not dirPath.endswith('/'):
@@ -60,26 +61,55 @@ def processContent(content):
             result += content[i]
     return result
 
+def floatEqual(a, b, delta):
+    if fabs(a - b) <= delta:
+        return True
+    else:
+        return False
 
 def readAndWrite(pathList, des='./des/'):
+    print 'begin to write files to %s' %(des)
+    n = len(pathList)
     try:
         os.stat(des)
     except:
         os.mkdir(des)
+    
+    finished = .0
+    prefinished = .0
     for path in pathList:
-        print 'processing %s...' %(path)
+        #print 'processing %s...' %(path)
         content = readContent(path)
         content = processContent(content)
         items = path.split('/')
         desPath = des + items[-2] + '_' + items[-1]
-        print desPath
-        if os.path.exists(desPath):
-            print 'file name ' + desPath + ' has been used.'
+        #print desPath
+        #if os.path.exists(desPath):
+        #    print 'file name ' + desPath + ' has been used.'
         writeContent(content, desPath)
-
+        finished += 1
+        if (finished / (1.0 * n) - prefinished) >= 0.01:
+            print 'finished %lf%%' %(finished / (1.0 * n) * 100.0)
+            prefinished = finished / (1.0 * n)
 
 if __name__ == '__main__':
-    fileList = readDir('./sample')
-    readAndWrite(fileList)
+    fileList = readDir('./reduced')
+    train_set = []
+    validate_set = []
+    test_set = []
+    for filePath in fileList:
+        r = random.random()
+        if r < 0.7:
+            train_set.append(filePath)
+        elif r >= 0.7 and r < 0.85:
+            validate_set.append(filePath)
+        else:
+            test_set.append(filePath)
+    print 'train_set size %d, vaildate_set size %d, test_set size %d' \
+            %(len(train_set), len(validate_set), len(test_set))
+    readAndWrite(train_set, './train_set/')
+    readAndWrite(validate_set, './validate_set/')
+    readAndWrite(test_set, './test_set/')
+    #readAndWrite(fileList)
 
 

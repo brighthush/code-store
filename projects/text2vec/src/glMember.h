@@ -21,7 +21,7 @@
 #define MAX_SENTENCE_LENGTH  100               //max length for a sentence
 #define MAX_CODE_LENGTH      40                //max height for a huffman tree
 
-#define MAX_TEXT_LENGTH      60000             //max text length
+#define MAX_TEXT_LENGTH      100000             //max text length
 
 typedef double real;
 typedef long long LL;
@@ -55,7 +55,7 @@ inline real getSigmoid(real &x)
 
 void readWord(char *word, FILE *fin);
 
-LL readFile(char *filePath, char *content, LL &contentSize);
+LL readFile(char *filePath, char *&content, LL &contentSize);
 std::vector< std::string > readDir(char *dirPath);
 int argPos(char *str, int argc, char **argv);
 

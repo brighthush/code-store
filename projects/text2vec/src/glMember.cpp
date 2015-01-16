@@ -30,10 +30,10 @@ int cbow_flag = 1, sg_flag = 0, hs_flag = 1, ns_flag = 0;
 int num_threads = 20;
 
 // model parameters
-int vectorSize = 200, docvecSize = 400;
+int vectorSize = 150, docvecSize = 600;
 real learningRate = 0.025;
 LL window = 4;
-LL numIteration = 5;
+LL numIteration = 15;
 
 int glPredictStage = 0;
 
@@ -88,7 +88,7 @@ void readWord(char *word, FILE *fin)
     word[a] = 0; //set the end to be '\0'
 }
 
-LL readFile(char *filePath, char *content, LL &contentSize)
+LL readFile(char *filePath, char *&content, LL &contentSize)
 {
     FILE *pf = NULL;
     pf = fopen(filePath, "rb");
@@ -96,6 +96,7 @@ LL readFile(char *filePath, char *content, LL &contentSize)
     fseek(pf, 0, SEEK_END);
     LL length = ftell(pf);
     if(length+1 >= contentSize) { contentSize = length + 1000; content = (char *)realloc(content, contentSize); }
+    if(content == NULL) { printf("realloc for content faild.\n"); exit(-1); }
     rewind(pf);
     length = fread(content, 1, length, pf);
     content[length] = '\0';

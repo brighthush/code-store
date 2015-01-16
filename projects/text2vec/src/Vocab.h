@@ -59,7 +59,7 @@ public:
     char* get_word(LL index) { return vocab[index].get_word(); }
 
     // indexs need to be allocated before call this function
-    int text2Index(char *text, int *indexs, int &indexsSize);
+    int text2Index(char *text, int *&indexs, int &indexsSize);
     int getDocHash(std::string &docName);
     std::string getDocName(int index) { return docs[index]; }
     int addDoc(std::string &docName);

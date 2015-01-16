@@ -11,7 +11,6 @@
 #include <pthread.h>
 
 #include "Vocab.h"
-
 using namespace std;
 
 Vocab vocabulary;
@@ -72,15 +71,15 @@ void initNet()
 void *trainModelThread(void *id)
 {
     LL trainDocCnt = vocabulary.get_trainDocCnt();
+    LL trainWordCnt = vocabulary.get_trainWordCnt();
     LL leftIndex = (trainDocCnt / (LL)num_threads) * (LL)id;
     LL rightIndex = min((trainDocCnt / (LL)num_threads) * ((LL)id + 1), trainDocCnt);
-    printf("thread %lld: processing files [%lld, %lld)]\n", (LL)id, \
+    //printf("thread %lld: processing files [%lld, %lld)]\n", (LL)id, \
             leftIndex, rightIndex);
     int projSize = docvecSize + window * 2 * vectorSize;
     real *neu1 = (real *)calloc(projSize, sizeof(real));
     real *neu1e = (real *)calloc(projSize, sizeof(real));
 
-    char *filePath = (char *)malloc(sizeof(char) * 500);
     char *content = (char *)malloc(sizeof(char) * MAX_TEXT_LENGTH);
     LL contentSize = MAX_TEXT_LENGTH;
     LL length = 0;
@@ -88,16 +87,15 @@ void *trainModelThread(void *id)
     int indexsSize = MAX_TEXT_LENGTH / 6;
     indexs = (int *)malloc((LL)indexsSize * sizeof(int));
     
-    LL localIter = 0;
+    LL localIter = 0, localTrainedWordCnt = 0;
     real localLearningRate = learningRate;
     while(localIter < numIteration)
     {
-        printf("thread: %lld, iteration %lld\n", (LL)id, localIter);
+        printf("thread: %lld, iteration: %lld\n", (LL)id, localIter);
         for(LL doc=leftIndex; doc<rightIndex; ++doc)
         {
             string docName = vocabulary.getDocName(doc);
-            strcpy(filePath, docName.c_str());
-            length = readFile(filePath, content, contentSize);
+            length = readFile((char *)docName.c_str(), content, contentSize);
             //printf("thread %lld, %s\n", (LL)id, filePath);
             int wordCnt = vocabulary.text2Index(content, indexs, indexsSize);
             //printf("thread %lld, wordCnt %d\n", (LL)id, wordCnt);
@@ -152,6 +150,15 @@ void *trainModelThread(void *id)
                         for(int i=0; i<vectorSize; ++i) syn0[temp * vectorSize + i] += neu1e[shift++];
                     }
                 }
+                ++localTrainedWordCnt; ++word_count_actual;
+                if(localTrainedWordCnt % 10000 == 0)
+                {
+                    localLearningRate = learningRate * \
+                                        (1 - word_count_actual / (real)(numIteration * trainWordCnt + 1));
+                    if(localLearningRate < learningRate * 0.0001) 
+                        localLearningRate = learningRate * 0.0001;
+                    printf("thread: %lld, localLearningRate: %.8lf\n", (LL)id, localLearningRate);
+                }
             }
         }
         ++localIter;
@@ -203,6 +210,18 @@ void writeWordvec(char *filePath)
     fclose(fo);
 }
 
+/*
+ * parameter output file format:
+ * windowSize vectorSize docvecSize vocabSize trainDocCnt
+ * vocabSize-1 projSize
+ * col_0_0 col_0_1 ... col_0_{projSize-1}
+ * ...
+ * col_{vocabSize-2}_0 col_{vocabSize-2}_1 ... col_{vocabSize-2}_{projSize-1}
+ * 
+ * note: The number of inner node for Hierarchical Softmax algorithm is vocabSize-1.
+ * The size of projection layer is docvecSize+2*window*vectorSize.
+ * The variable in program represent inner node is syn1.
+ */
 void writeParameter(char *filePath)
 {
     if(strlen(filePath) == 0) { return ; }
@@ -222,6 +241,36 @@ void writeParameter(char *filePath)
     for(LL i=0; i<vocabSize-1; ++i) for(LL j=0; j<projSize; ++j)
         fprintf(fo, "%.8lf%c", syn1[i * projSize + j], j==projSize-1?'\n':' '); 
     fclose(fo);
+}
+
+/*
+ * Read parameters for syn1, more information see comment for function writeParameter.
+ */
+void readParameter(char *filePath, real *syn1, LL projSize)
+{
+    if(strlen(filePath) == 0) { printf("parameter file is not specified.\n"); exit(-1); }
+    FILE *fin;
+    fin = fopen(filePath, "r");
+    if(fin == NULL) { printf("open parameter file faild in readParamter function.\n"); exit(-1); }
+    
+    LL vocabSize = vocabulary.get_vocabSize();
+    LL trainDocCnt = vocabulary.get_trainDocCnt();
+    LL temp;
+    fscanf(fin, "%lld", &temp); if(temp != window) { 
+        printf("read parameter window is not same with current model.\n"); exit(-1); 
+    }
+    fscanf(fin, "%lld", &temp); if(temp != vectorSize) { 
+        printf("read parameter vectorSize is not same with current model.\n"); exit(-1); 
+    }
+    fscanf(fin, "%lld", &temp); if(temp != docvecSize) {
+        printf("read parameter docvecSize is not same with current model.\n"); exit(-1);
+    }
+    fscanf(fin, "%lld", &temp); if(temp != vocabSize) {
+        printf("read parameter vocabSize is not same with current model.\n"); exit(-1);
+    }
+    fscanf(fin, "%lld", &temp); // This is parameter trainDocCnt.
+    
+    fclose(fin);
 }
 
 void writeDocvec(char *filePath)
