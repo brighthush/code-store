@@ -9,9 +9,9 @@ Just like a saying goes that the palest ink is better than the best memory.
 
 Description of each subdirectory.
 
-python
+python:
   stores code for python.
 
-cpp
+cpp:
   stores code for cpp.
   
